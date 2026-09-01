@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מעקב חוזים — גירון · עד סוף 2026</title>
+<title>מעקב חוזים — גירון</title>
 <style>
   :root {
     --red: #c0392b; --red-l: #fdecea;
     --green: #1e8449; --green-l: #e8f8ef;
     --blue: #1d3557; --blue-l: #e8f1fb;
+    --orange: #e67e22; --orange-l: #fef5ec;
     --gray: #6c757d;
     --bg: #f4f6f8;
   }
@@ -32,16 +33,35 @@
   }
   .header h1 { font-size: 1.5em; }
   .header p { opacity: .9; margin-top: 4px; }
-  .stats { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px 12px 0 0;
+    background: #e2e8f0;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    color: #475569;
+    transition: all .2s;
+  }
+  .tab.active { background: var(--blue); color: #fff; }
+  .tab:hover { background: #cbd5e1; }
+  .tab.active:hover { background: var(--blue); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .stats { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
   .stat {
-    background: rgba(255,255,255,.15);
+    background: #fff;
     border-radius: 12px;
     padding: 10px 18px;
     text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
   }
-  .stat b { display: block; font-size: 1.5em; }
+  .stat b { display: block; font-size: 1.4em; color: var(--blue); }
   .table-wrap { background: #fff; border-radius: 14px; overflow-x: auto; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
-  table { width: 100%; border-collapse: collapse; min-width: 800px; }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
   th {
     background: var(--blue-l);
     color: var(--blue);
@@ -61,111 +81,87 @@
   }
   .tag.auto { background: var(--green-l); color: var(--green); }
   .tag.remind { background: var(--red-l); color: var(--red); }
+  .tag.urgent { background: var(--orange-l); color: var(--orange); }
   .notes { color: var(--gray); font-size: .85em; }
-  .legend { margin: 14px 0 6px; font-size: .9em; color: var(--gray); }
+  .legend { margin: 10px 0; font-size: .9em; color: var(--gray); }
   .footer { text-align: center; color: var(--gray); font-size: .82em; margin: 20px 0; }
   @media print {
     body { background: #fff; padding: 0; }
     .table-wrap { box-shadow: none; }
+    .tab { display: none; }
+    .panel { display: block !important; }
   }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>📋 מעקב חוזים — גירון · נכון ל-01.09.2026</h1>
-  <p>כל החוזים שמסתיימים עד תחילת 2027 · תזכורות אוטומטיות 60 יום לפני הסיום</p>
-  <div class="stats">
-    <div class="stat"><b>50</b> חוזים במעקב</div>
-    <div class="stat"><b>47</b> עם תזכורת</div>
-    <div class="stat"><b>3</b> הארכה אוטומטית</div>
-  </div>
+  <h1>📋 מעקב חוזים — גירון פיתוח</h1>
+  <p>נכון ל-01.09.2026 · מרכז גירון: תזכורת 60 יום · בית אבגד: תזכורת 6 חודשים</p>
 </div>
 
-<div class="legend">🔴 אדום = חוזה מסתיים · 🟢 ירוק = הארכה אוטומטית (בלי תזכורת) · ⏰ = תזכורת תישלח 60 יום לפני</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('giron')">🏢 מרכז גירון רעננה (21)</button>
+  <button class="tab" onclick="showTab('avgad')">💎 בית אבגד (19)</button>
+</div>
 
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-  <th>אתר</th><th>לקוח</th><th>מס' חוזה</th><th>סיום החוזה</th><th>סטטוס</th><th>תזכורת (60 יום)</th><th>הערות</th>
-</tr>
-</thead>
-<tbody>
-<tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר שטרית</td>
-      <td dir="ltr" class="mono">0017000000059</td>
-      <td class="end">31.10.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בספטמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
+<!-- ============ מרכז גירון ============ -->
+<div id="panel-giron" class="panel active">
+  <div class="stats">
+    <div class="stat"><b>21</b> חוזים</div>
+    <div class="stat"><b>18</b> עם תזכורת 60 יום</div>
+    <div class="stat"><b>3</b> הארכה אוטומטית</div>
+  </div>
+  <div class="legend">🔴 אדום = חוזה מסתיים · 🟢 ירוק = הארכה אוטומטית (בלי תזכורת)</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>לקוח</th><th>מס' חוזה</th><th>סיום החוזה</th><th>סטטוס</th><th>תזכורת (60 יום)</th><th>הערות</th>
+    </tr></thead>
+    <tbody>
+    <tr class="">
       <td class="cust">פופ סגל שירותים (2013) בע&quot;מ</td>
       <td dir="ltr" class="mono">000800000085</td>
       <td class="end">31.10.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בספטמבר</td>
       <td class="notes">085B4</td>
     </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">אומלצ&#x27;נקו אלכסנדר</td>
-      <td dir="ltr" class="mono">0017000000052</td>
-      <td class="end">7.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>8 בספטמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">דניה הירש קולרמן</td>
-      <td dir="ltr" class="mono">0017000000047</td>
-      <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 באוקטובר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ד&quot;ר אודי יוגב בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000005</td>
       <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
       <td class="notes">039B2</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">אייזן הנס מרים</td>
       <td dir="ltr" class="mono">0008000000060</td>
       <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
       <td class="notes">מדישר</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">איטין לב ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000063</td>
       <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
       <td class="notes">מדישר</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">רביד דורית ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000062</td>
       <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
       <td class="notes">מדישר</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">קרסין אלישע ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000072</td>
       <td class="end">30.11.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
       <td class="notes">מדישר</td>
     </tr><tr class="auto-row">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">קרן יניב</td>
       <td dir="ltr" class="mono">0008000000046</td>
       <td class="end">4.12.2026</td>
@@ -173,239 +169,69 @@
       <td>—</td>
       <td class="notes">אופציה 3 → 04/12/2027</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">בן ברוך יוסף</td>
       <td dir="ltr" class="mono">0008000000020</td>
       <td class="end">15.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>16 באוקטובר</td>
       <td class="notes">035</td>
     </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">שגיב הושנג</td>
-      <td dir="ltr" class="mono">0017000000013</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר יאיר גורצק</td>
-      <td dir="ltr" class="mono">0017000000015</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר כרמון יובל</td>
-      <td dir="ltr" class="mono">0017000000016</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר אבי בן שבת</td>
-      <td dir="ltr" class="mono">0017000000044</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">אפק מרכז טיפולי</td>
-      <td dir="ltr" class="mono">0017000000048</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר מיכל צדוק</td>
-      <td dir="ltr" class="mono">0017000000050</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">אירמה ואן דה פיש</td>
-      <td dir="ltr" class="mono">0017000000054</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">דניאל באום</td>
-      <td dir="ltr" class="mono">0017000000061</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">לידי כהן פרג&#x27;ון</td>
-      <td dir="ltr" class="mono">0017000000066</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר גלינה חזנוב להב</td>
-      <td dir="ltr" class="mono">0017000000039</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">עדי וילף ירקוני</td>
-      <td dir="ltr" class="mono">0017000000041</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ד&quot;ר גיא פייגין</td>
-      <td dir="ltr" class="mono">0017000000046</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">פרופ&#x27; שמחה מייזל</td>
-      <td dir="ltr" class="mono">0017000000064</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ד&quot;ר אנדרי אופק</td>
-      <td dir="ltr" class="mono">0018000000025</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">א.ר. מדיקו תובנות בע&quot;מ</td>
-      <td dir="ltr" class="mono">0018000000026</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">הארט 4 יו בע&quot;מ</td>
-      <td dir="ltr" class="mono">0018000000028</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">דניאל באום</td>
-      <td dir="ltr" class="mono">0018000000031</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ד&quot;ר אייל רוסו</td>
-      <td dir="ltr" class="mono">0018000000024</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ד&quot;ר יוני ישעיהו</td>
-      <td dir="ltr" class="mono">0018000000032</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ישראל גלוזמן</td>
-      <td dir="ltr" class="mono">0018000000033</td>
-      <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>1 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">צילה בן אבי</td>
       <td dir="ltr" class="mono">0008000000048</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">001B2</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">דר&#x27; זילר</td>
       <td dir="ltr" class="mono">0008000000007</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">031LB2</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">דר&#x27; יוחנן חורב בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000030</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">095</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">רוזנבאום יצחק</td>
       <td dir="ltr" class="mono">0008000000027</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">092</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ברד אנד ברקפסט בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000052</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">007B2</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ג&#x27;ק קובה בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000006</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">025</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">נרי מלכה</td>
       <td dir="ltr" class="mono">0008000000082</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">082</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">טרפלר רחל - קוקי בגדים</td>
       <td dir="ltr" class="mono">0008000000023</td>
       <td class="end">31.12.2026</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
       <td class="notes">023</td>
     </tr><tr class="auto-row">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ד&quot;ר חטואל דוריאן</td>
       <td dir="ltr" class="mono">0008000000011</td>
       <td class="end">31.12.2026</td>
@@ -413,7 +239,6 @@
       <td>—</td>
       <td class="notes">אופציה 1 → 31/12/2028</td>
     </tr><tr class="auto-row">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">א.א.ר.ם מרפאות מיכאל בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000041</td>
       <td class="end">31.12.2026</td>
@@ -421,83 +246,174 @@
       <td>—</td>
       <td class="notes">אופציות 1+2 → 31/12/2029</td>
     </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">ישי ניר</td>
-      <td dir="ltr" class="mono">0017000000074</td>
-      <td class="end">6.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>7 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ג&#x27;אסט ביף ישראל בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000037</td>
       <td class="end">14.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>15 בנובמבר</td>
       <td class="notes">066</td>
     </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">איילת הלוי</td>
-      <td dir="ltr" class="mono">0018000000030</td>
-      <td class="end">25.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>26 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ד&quot;ר חן חג&#x27;בי</td>
-      <td dir="ltr" class="mono">0018000000039</td>
-      <td class="end">29.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>30 בנובמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">הלן כהן חושן</td>
-      <td dir="ltr" class="mono">0017000000058</td>
-      <td class="end">31.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>2 בדצמבר</td>
-      <td class="notes">שכירות+חנייה</td>
-    </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">ביפלנד בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000047</td>
       <td class="end">31.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>2 בדצמבר</td>
       <td class="notes">080B2</td>
     </tr><tr class="">
-      <td>מרכז גירון רעננה</td>
       <td class="cust">פוסטי את ליבהבר</td>
       <td dir="ltr" class="mono">0008000000036</td>
       <td class="end">31.1.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
+      <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>2 בדצמבר</td>
       <td class="notes">036B2</td>
-    </tr><tr class="">
-      <td>מדספייס ראשל&quot;צ</td>
-      <td class="cust">ד&quot;ר דן מננה מרכז לרפואה</td>
-      <td dir="ltr" class="mono">0018000000029</td>
-      <td class="end">4.2.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>6 בדצמבר</td>
-      <td class="notes"></td>
-    </tr><tr class="">
-      <td>מדספייס רעננה</td>
-      <td class="cust">חיה רובינשטיין</td>
-      <td dir="ltr" class="mono">0017000000051</td>
-      <td class="end">16.2.2027</td>
-      <td><span class="tag remind">⏰ תזכורת</span></td>
-      <td>18 בדצמבר</td>
-      <td class="notes"></td>
     </tr>
-</tbody>
-</table>
+    </tbody>
+  </table>
+  </div>
 </div>
 
-<div class="footer">⚕️ הוכן ע"י Hermes Agent · מבוסס על דוחות Priority (סיום חוזים + אופציות) · עודכן 01.09.2026</div>
+<!-- ============ בית אבגד ============ -->
+<div id="panel-avgad" class="panel">
+  <div class="stats">
+    <div class="stat"><b>19</b> שוכרים פעילים</div>
+    <div class="stat"><b>3</b> דחופים</div>
+  </div>
+  <div class="legend">🟠 כתום = דחוף (פחות מ-6 חודשים לסיום) · תזכורת נשלחת 6 חודשים לפני</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>שוכר</th><th>קומה</th><th>סיום החוזה</th><th>תזכורת (6 חודשים)</th><th>הערות</th>
+    </tr></thead>
+    <tbody>
+    <tr>
+      <td class="cust">אבגד יהלום ניהול ושירותים בע&quot;מ</td>
+      <td class="mono">קומה 15</td>
+      <td class="end">30.9.2026</td>
+      <td>28 במרץ <span class="tag urgent">🔴 דחוף!</span></td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">אלעד שרייבר</td>
+      <td class="mono">קומה 15</td>
+      <td class="end">15.11.2026</td>
+      <td>15 במאי <span class="tag urgent">🔴 דחוף!</span></td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">יוניפרפ ישראל בע&quot;מ</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">31.12.2026</td>
+      <td>28 ביוני <span class="tag urgent">🔴 דחוף!</span></td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">סטודיו האודר בע&quot;מ</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">31.3.2027</td>
+      <td>28 בספטמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">החברה למימוש זכויות</td>
+      <td class="mono">קומה 14</td>
+      <td class="end">31.3.2027</td>
+      <td>28 בספטמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">החברה למימוש זכויות</td>
+      <td class="mono">קומה 14</td>
+      <td class="end">30.6.2027</td>
+      <td>28 בדצמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">חברת ע.ד. דיאמנט שירותים משפטיים</td>
+      <td class="mono">קומה 14</td>
+      <td class="end">31.8.2027</td>
+      <td>28 בפברואר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">א.ל.מ. מרקוט בע&quot;מ</td>
+      <td class="mono">קומה 0</td>
+      <td class="end">31.12.2027</td>
+      <td>28 ביוני </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">ל.ר.ג. אירועים בע&quot;מ</td>
+      <td class="mono">קומה 0</td>
+      <td class="end">31.12.2027</td>
+      <td>28 ביוני </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">מאיה ויואב החזקות בע&quot;מ</td>
+      <td class="mono">קומה 0</td>
+      <td class="end">15.2.2028</td>
+      <td>15 באוגוסט </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">סוכנות ביטוח</td>
+      <td class="mono">קומה 17</td>
+      <td class="end">31.7.2028</td>
+      <td>28 בינואר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">כפריס א.ד.סי. בע&quot;מ</td>
+      <td class="mono">קומה -1</td>
+      <td class="end">31.10.2028</td>
+      <td>28 באפריל </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">סי ווי לוגיסטיקס בע&quot;מ</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">30.6.2030</td>
+      <td>28 בדצמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">סי ווי לוגיסטיקס בע&quot;מ</td>
+      <td class="mono">קומה 4</td>
+      <td class="end">30.6.2030</td>
+      <td>28 בדצמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">רשות ניירות ערך</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">31.12.2030</td>
+      <td>28 ביוני </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">הנסון (ישראל) בע&quot;מ</td>
+      <td class="mono">קומה 14</td>
+      <td class="end">31.12.2030</td>
+      <td>28 ביוני </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">הנסון (ישראל) בע&quot;מ</td>
+      <td class="mono">קומה 16</td>
+      <td class="end">31.12.2030</td>
+      <td>28 ביוני </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">דסטיני נדל&quot;ן בע&quot;מ</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">30.6.2048</td>
+      <td>28 בדצמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr><tr>
+      <td class="cust">דסטיני נכסים (1991) בע&quot;מ</td>
+      <td class="mono">קומה 1</td>
+      <td class="end">30.6.2048</td>
+      <td>28 בדצמבר </td>
+      <td class="notes"> גירון פיתוח </td>
+    </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
 
+<div class="footer">⚕️ הוכן ע"י Hermes Agent · מבוסס על דוחות Priority + דוח מצב נכסים · עודכן 01.09.2026</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
 </body>
 </html>
