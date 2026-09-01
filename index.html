@@ -29,10 +29,24 @@
     border-radius: 16px;
     padding: 24px;
     text-align: center;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
   .header h1 { font-size: 1.5em; }
   .header p { opacity: .9; margin-top: 4px; }
+  .toolbar { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: .9em;
+  }
+  .btn.sec { background: #64748b; }
+  .btn:hover { opacity: .85; }
+  .saved-msg { color: var(--green); font-weight: 700; font-size: .85em; align-self: center; }
   .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
   .tab {
     flex: 1;
@@ -61,7 +75,7 @@
   }
   .stat b { display: block; font-size: 1.4em; color: var(--blue); }
   .table-wrap { background: #fff; border-radius: 14px; overflow-x: auto; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
-  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  table { width: 100%; border-collapse: collapse; min-width: 750px; }
   th {
     background: var(--blue-l);
     color: var(--blue);
@@ -69,7 +83,7 @@
     font-size: .9em;
     white-space: nowrap;
   }
-  td { padding: 10px; border-bottom: 1px solid #eee; font-size: .95em; }
+  td { padding: 10px; border-bottom: 1px solid #eee; font-size: .95em; vertical-align: top; }
   tr:hover td { background: #f8fafc; }
   .cust { font-weight: 600; }
   .mono { font-size: .85em; color: var(--gray); }
@@ -82,13 +96,26 @@
   .tag.auto { background: var(--green-l); color: var(--green); }
   .tag.remind { background: var(--red-l); color: var(--red); }
   .tag.urgent { background: var(--orange-l); color: var(--orange); }
-  .notes { color: var(--gray); font-size: .85em; }
+  .note-input {
+    width: 100%;
+    min-width: 180px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-family: inherit;
+    font-size: .88em;
+    resize: vertical;
+    background: #fffdf5;
+  }
+  .note-input:focus { outline: 2px solid var(--blue); background: #fff; }
+  .notes { padding: 8px; }
   .legend { margin: 10px 0; font-size: .9em; color: var(--gray); }
   .footer { text-align: center; color: var(--gray); font-size: .82em; margin: 20px 0; }
   @media print {
     body { background: #fff; padding: 0; }
     .table-wrap { box-shadow: none; }
     .tab { display: none; }
+    .toolbar { display: none; }
     .panel { display: block !important; }
   }
 </style>
@@ -98,6 +125,13 @@
 <div class="header">
   <h1>📋 מעקב חוזים — גירון פיתוח</h1>
   <p>נכון ל-01.09.2026 · מרכז גירון: תזכורת 60 יום · בית אבגד: תזכורת 6 חודשים</p>
+</div>
+
+<div class="toolbar">
+  <button class="btn sec" onclick="exportNotes()">💾 ייצוא הערות</button>
+  <button class="btn sec" onclick="document.getElementById('importFile').click()">📥 ייבוא הערות</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importNotes(event)">
+  <span id="savedMsg" class="saved-msg"></span>
 </div>
 
 <div class="tabs">
@@ -112,160 +146,202 @@
     <div class="stat"><b>18</b> עם תזכורת 60 יום</div>
     <div class="stat"><b>3</b> הארכה אוטומטית</div>
   </div>
-  <div class="legend">🔴 אדום = חוזה מסתיים · 🟢 ירוק = הארכה אוטומטית (בלי תזכורת)</div>
+  <div class="legend">🔴 אדום = חוזה מסתיים · 🟢 ירוק = הארכה אוטומטית (בלי תזכורת) · הערות נשמרות אוטומטית בדפדפן</div>
   <div class="table-wrap">
   <table>
     <thead><tr>
       <th>לקוח</th><th>מס' חוזה</th><th>סיום החוזה</th><th>סטטוס</th><th>תזכורת (60 יום)</th><th>הערות</th>
     </tr></thead>
     <tbody>
-    <tr class="">
+    <tr class="" data-note-key="giron_000800000085">
       <td class="cust">פופ סגל שירותים (2013) בע&quot;מ</td>
       <td dir="ltr" class="mono">000800000085</td>
       <td class="end">31.10.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בספטמבר</td>
-      <td class="notes">085B4</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_000800000085">085B4</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000005">
       <td class="cust">ד&quot;ר אודי יוגב בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000005</td>
       <td class="end">30.11.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
-      <td class="notes">039B2</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000005">039B2</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000060">
       <td class="cust">אייזן הנס מרים</td>
       <td dir="ltr" class="mono">0008000000060</td>
       <td class="end">30.11.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
-      <td class="notes">מדישר</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000060">מדישר</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000063">
       <td class="cust">איטין לב ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000063</td>
       <td class="end">30.11.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
-      <td class="notes">מדישר</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000063">מדישר</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000062">
       <td class="cust">רביד דורית ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000062</td>
       <td class="end">30.11.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
-      <td class="notes">מדישר</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000062">מדישר</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000072">
       <td class="cust">קרסין אלישע ד&quot;ר</td>
       <td dir="ltr" class="mono">0008000000072</td>
       <td class="end">30.11.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 באוקטובר</td>
-      <td class="notes">מדישר</td>
-    </tr><tr class="auto-row">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000072">מדישר</textarea>
+      </td>
+    </tr><tr class="auto-row" data-note-key="giron_0008000000046">
       <td class="cust">קרן יניב</td>
       <td dir="ltr" class="mono">0008000000046</td>
       <td class="end">4.12.2026</td>
       <td><span class="tag auto">🔄 אוטומטי</span></td>
       <td>—</td>
-      <td class="notes">אופציה 3 → 04/12/2027</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000046">אופציה 3 → 04/12/2027</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000020">
       <td class="cust">בן ברוך יוסף</td>
       <td dir="ltr" class="mono">0008000000020</td>
       <td class="end">15.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>16 באוקטובר</td>
-      <td class="notes">035</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000020">035</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000048">
       <td class="cust">צילה בן אבי</td>
       <td dir="ltr" class="mono">0008000000048</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">001B2</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000048">001B2</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000007">
       <td class="cust">דר&#x27; זילר</td>
       <td dir="ltr" class="mono">0008000000007</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">031LB2</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000007">031LB2</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000030">
       <td class="cust">דר&#x27; יוחנן חורב בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000030</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">095</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000030">095</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000027">
       <td class="cust">רוזנבאום יצחק</td>
       <td dir="ltr" class="mono">0008000000027</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">092</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000027">092</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000052">
       <td class="cust">ברד אנד ברקפסט בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000052</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">007B2</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000052">007B2</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000006">
       <td class="cust">ג&#x27;ק קובה בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000006</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">025</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000006">025</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000082">
       <td class="cust">נרי מלכה</td>
       <td dir="ltr" class="mono">0008000000082</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">082</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000082">082</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000023">
       <td class="cust">טרפלר רחל - קוקי בגדים</td>
       <td dir="ltr" class="mono">0008000000023</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>1 בנובמבר</td>
-      <td class="notes">023</td>
-    </tr><tr class="auto-row">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000023">023</textarea>
+      </td>
+    </tr><tr class="auto-row" data-note-key="giron_0008000000011">
       <td class="cust">ד&quot;ר חטואל דוריאן</td>
       <td dir="ltr" class="mono">0008000000011</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag auto">🔄 אוטומטי</span></td>
       <td>—</td>
-      <td class="notes">אופציה 1 → 31/12/2028</td>
-    </tr><tr class="auto-row">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000011">אופציה 1 → 31/12/2028</textarea>
+      </td>
+    </tr><tr class="auto-row" data-note-key="giron_0008000000041">
       <td class="cust">א.א.ר.ם מרפאות מיכאל בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000041</td>
       <td class="end">31.12.2026</td>
       <td><span class="tag auto">🔄 אוטומטי</span></td>
       <td>—</td>
-      <td class="notes">אופציות 1+2 → 31/12/2029</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000041">אופציות 1+2 → 31/12/2029</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000037">
       <td class="cust">ג&#x27;אסט ביף ישראל בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000037</td>
       <td class="end">14.1.2027</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>15 בנובמבר</td>
-      <td class="notes">066</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000037">066</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000047">
       <td class="cust">ביפלנד בע&quot;מ</td>
       <td dir="ltr" class="mono">0008000000047</td>
       <td class="end">31.1.2027</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>2 בדצמבר</td>
-      <td class="notes">080B2</td>
-    </tr><tr class="">
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000047">080B2</textarea>
+      </td>
+    </tr><tr class="" data-note-key="giron_0008000000036">
       <td class="cust">פוסטי את ליבהבר</td>
       <td dir="ltr" class="mono">0008000000036</td>
       <td class="end">31.1.2027</td>
       <td><span class="tag remind">⏰ תזכורת 60 יום</span></td>
       <td>2 בדצמבר</td>
-      <td class="notes">036B2</td>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="giron_0008000000036">036B2</textarea>
+      </td>
     </tr>
     </tbody>
   </table>
@@ -278,127 +354,165 @@
     <div class="stat"><b>19</b> שוכרים פעילים</div>
     <div class="stat"><b>3</b> דחופים</div>
   </div>
-  <div class="legend">🟠 כתום = דחוף (פחות מ-6 חודשים לסיום) · תזכורת נשלחת 6 חודשים לפני</div>
+  <div class="legend">🟠 כתום = דחוף (פחות מ-6 חודשים לסיום) · הערות נשמרות אוטומטית בדפדפן</div>
   <div class="table-wrap">
   <table>
     <thead><tr>
       <th>שוכר</th><th>קומה</th><th>סיום החוזה</th><th>תזכורת (6 חודשים)</th><th>הערות</th>
     </tr></thead>
     <tbody>
-    <tr>
+    <tr data-note-key="avgad_אבגד יהלום ניהול ושירותים בע"מ_15">
       <td class="cust">אבגד יהלום ניהול ושירותים בע&quot;מ</td>
       <td class="mono">קומה 15</td>
       <td class="end">30.9.2026</td>
       <td>28 במרץ <span class="tag urgent">🔴 דחוף!</span></td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_אבגד יהלום ניהול ושירותים בע"מ_15"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_אלעד שרייבר_15">
       <td class="cust">אלעד שרייבר</td>
       <td class="mono">קומה 15</td>
       <td class="end">15.11.2026</td>
       <td>15 במאי <span class="tag urgent">🔴 דחוף!</span></td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_אלעד שרייבר_15"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_יוניפרפ ישראל בע"מ_1">
       <td class="cust">יוניפרפ ישראל בע&quot;מ</td>
       <td class="mono">קומה 1</td>
       <td class="end">31.12.2026</td>
       <td>28 ביוני <span class="tag urgent">🔴 דחוף!</span></td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_יוניפרפ ישראל בע"מ_1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_סטודיו האודר בע"מ_1">
       <td class="cust">סטודיו האודר בע&quot;מ</td>
       <td class="mono">קומה 1</td>
       <td class="end">31.3.2027</td>
       <td>28 בספטמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_סטודיו האודר בע"מ_1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_החברה למימוש זכויות_14">
       <td class="cust">החברה למימוש זכויות</td>
       <td class="mono">קומה 14</td>
       <td class="end">31.3.2027</td>
       <td>28 בספטמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_החברה למימוש זכויות_14"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_החברה למימוש זכויות_14">
       <td class="cust">החברה למימוש זכויות</td>
       <td class="mono">קומה 14</td>
       <td class="end">30.6.2027</td>
       <td>28 בדצמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_החברה למימוש זכויות_14"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_חברת ע.ד. דיאמנט שירותים משפטיים_14">
       <td class="cust">חברת ע.ד. דיאמנט שירותים משפטיים</td>
       <td class="mono">קומה 14</td>
       <td class="end">31.8.2027</td>
       <td>28 בפברואר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_חברת ע.ד. דיאמנט שירותים משפטיים_14"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_א.ל.מ. מרקוט בע"מ_0">
       <td class="cust">א.ל.מ. מרקוט בע&quot;מ</td>
       <td class="mono">קומה 0</td>
       <td class="end">31.12.2027</td>
       <td>28 ביוני </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_א.ל.מ. מרקוט בע"מ_0"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_ל.ר.ג. אירועים בע"מ_0">
       <td class="cust">ל.ר.ג. אירועים בע&quot;מ</td>
       <td class="mono">קומה 0</td>
       <td class="end">31.12.2027</td>
       <td>28 ביוני </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_ל.ר.ג. אירועים בע"מ_0"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_מאיה ויואב החזקות בע"מ_0">
       <td class="cust">מאיה ויואב החזקות בע&quot;מ</td>
       <td class="mono">קומה 0</td>
       <td class="end">15.2.2028</td>
       <td>15 באוגוסט </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_מאיה ויואב החזקות בע"מ_0"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_סוכנות ביטוח_17">
       <td class="cust">סוכנות ביטוח</td>
       <td class="mono">קומה 17</td>
       <td class="end">31.7.2028</td>
       <td>28 בינואר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_סוכנות ביטוח_17"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_כפריס א.ד.סי. בע"מ_-1">
       <td class="cust">כפריס א.ד.סי. בע&quot;מ</td>
       <td class="mono">קומה -1</td>
       <td class="end">31.10.2028</td>
       <td>28 באפריל </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_כפריס א.ד.סי. בע"מ_-1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_סי ווי לוגיסטיקס בע"מ_1">
       <td class="cust">סי ווי לוגיסטיקס בע&quot;מ</td>
       <td class="mono">קומה 1</td>
       <td class="end">30.6.2030</td>
       <td>28 בדצמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_סי ווי לוגיסטיקס בע"מ_1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_סי ווי לוגיסטיקס בע"מ_4">
       <td class="cust">סי ווי לוגיסטיקס בע&quot;מ</td>
       <td class="mono">קומה 4</td>
       <td class="end">30.6.2030</td>
       <td>28 בדצמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_סי ווי לוגיסטיקס בע"מ_4"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_רשות ניירות ערך_1">
       <td class="cust">רשות ניירות ערך</td>
       <td class="mono">קומה 1</td>
       <td class="end">31.12.2030</td>
       <td>28 ביוני </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_רשות ניירות ערך_1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_הנסון (ישראל) בע"מ_14">
       <td class="cust">הנסון (ישראל) בע&quot;מ</td>
       <td class="mono">קומה 14</td>
       <td class="end">31.12.2030</td>
       <td>28 ביוני </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_הנסון (ישראל) בע"מ_14"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_הנסון (ישראל) בע"מ_16">
       <td class="cust">הנסון (ישראל) בע&quot;מ</td>
       <td class="mono">קומה 16</td>
       <td class="end">31.12.2030</td>
       <td>28 ביוני </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_הנסון (ישראל) בע"מ_16"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_דסטיני נדל"ן בע"מ_1">
       <td class="cust">דסטיני נדל&quot;ן בע&quot;מ</td>
       <td class="mono">קומה 1</td>
       <td class="end">30.6.2048</td>
       <td>28 בדצמבר </td>
-      <td class="notes"> גירון פיתוח </td>
-    </tr><tr>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_דסטיני נדל"ן בע"מ_1"></textarea>
+      </td>
+    </tr><tr data-note-key="avgad_דסטיני נכסים (1991) בע"מ_1">
       <td class="cust">דסטיני נכסים (1991) בע&quot;מ</td>
       <td class="mono">קומה 1</td>
       <td class="end">30.6.2048</td>
       <td>28 בדצמבר </td>
-      <td class="notes"> גירון פיתוח </td>
+      <td class="notes">
+        <textarea class="note-input" rows="1" placeholder="הוסף הערה..." data-key="avgad_דסטיני נכסים (1991) בע"מ_1"></textarea>
+      </td>
     </tr>
     </tbody>
   </table>
@@ -408,12 +522,77 @@
 <div class="footer">⚕️ הוכן ע"י Hermes Agent · מבוסס על דוחות Priority + דוח מצב נכסים · עודכן 01.09.2026</div>
 
 <script>
+const STORAGE_KEY = 'giron_tracker_notes_v1';
+let saveTimer = null;
+
+function loadNotes() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch (e) { return {}; }
+}
+
+function saveNotes() {
+  const notes = {};
+  document.querySelectorAll('.note-input').forEach(t => {
+    if (t.value.trim()) notes[t.dataset.key] = t.value;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  const msg = document.getElementById('savedMsg');
+  msg.textContent = '✅ נשמר אוטומטית';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => msg.textContent = '', 2000);
+}
+
+function restoreNotes() {
+  const notes = loadNotes();
+  document.querySelectorAll('.note-input').forEach(t => {
+    if (notes[t.dataset.key]) t.value = notes[t.dataset.key];
+  });
+}
+
 function showTab(name) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
   event.target.classList.add('active');
 }
+
+function exportNotes() {
+  const notes = loadNotes();
+  const blob = new Blob([JSON.stringify(notes, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'giron-tracker-notes.json';
+  a.click();
+}
+
+function importNotes(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const notes = JSON.parse(e.target.result);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+      restoreNotes();
+      document.getElementById('savedMsg').textContent = '✅ ההערות יובאו';
+      setTimeout(() => document.getElementById('savedMsg').textContent = '', 2500);
+    } catch (err) {
+      alert('קובץ לא תקין');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+document.addEventListener('DOMContentLoaded', restoreNotes);
+document.querySelectorAll('.note-input').forEach(t => {
+  t.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNotes, 500);
+  });
+});
+restoreNotes();
 </script>
 </body>
 </html>
