@@ -131,6 +131,7 @@
   <button class="btn sec" onclick="exportNotes()">💾 ייצוא הערות</button>
   <button class="btn sec" onclick="document.getElementById('importFile').click()">📥 ייבוא הערות</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importNotes(event)">
+  <span id="syncStatus" class="saved-msg">☁️ טוען…</span>
   <span id="savedMsg" class="saved-msg"></span>
 </div>
 
@@ -514,7 +515,27 @@
 
 <script>
 const STORAGE_KEY = 'giron_tracker_notes_v1';
+const CFG_KEY = 'contracts_tracker_cfg_v1';
+const DEFAULT_CFG = { binId: '6a97f59bda38895dfe2ec8b3', key: '$2a$10$Mo79nkShmWdnLxq6LDZFYuHVuFVc3LSVJ3dw6zKld8HgySkA5Mkxq' };
 let saveTimer = null;
+let dirty = false;   // האם יש שינוי מקומי שטרם נדחף
+
+function loadCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY)) || DEFAULT_CFG; } catch(e) { return DEFAULT_CFG; }
+}
+
+function showMsg(text) {
+  const msg = document.getElementById('savedMsg');
+  if (!msg) return;
+  msg.textContent = text;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { msg.textContent = cloudState(); }, 2500);
+}
+
+function setStatus(icon, text) {
+  const el = document.getElementById('syncStatus');
+  if (el) el.textContent = icon + ' ' + text;
+}
 
 function loadNotes() {
   try {
@@ -522,16 +543,71 @@ function loadNotes() {
   } catch (e) { return {}; }
 }
 
-function saveNotes() {
+function collectNotes() {
   const notes = {};
   document.querySelectorAll('.note-input').forEach(t => {
     if (t.value.trim()) notes[t.dataset.key] = t.value;
   });
+  return notes;
+}
+
+function applyNotes(notes) {
+  document.querySelectorAll('.note-input').forEach(t => {
+    t.value = (notes && notes[t.dataset.key]) ? notes[t.dataset.key] : '';
+  });
+}
+
+function saveNotes() {
+  const notes = collectNotes();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  const msg = document.getElementById('savedMsg');
-  msg.textContent = '✅ נשמר אוטומטית';
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => msg.textContent = '', 2000);
+  const cfg = loadCfg();
+  if (!cfg.binId || !cfg.key) { showMsg('✅ נשמר מקומית'); return; }
+  setStatus('⏳', 'שולח לענן…');
+  fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.key, 'X-Bin-Versioning': 'false' },
+    body: JSON.stringify({ updated: new Date().toISOString(), notes: notes })
+  }).then(r => {
+    if (r.ok) { dirty = false; setStatus('☁️', 'מסונכרן לענן'); showMsg('✅ נשמר וסונכרן'); }
+    else { setStatus('⚠️', 'מקומי בלבד (' + r.status + ')'); showMsg('⚠️ נשמר מקומית בלבד'); }
+  }).catch(() => { setStatus('⚠️', 'מקומי בלבד (אין חיבור)'); showMsg('⚠️ נשמר מקומית'); });
+}
+
+function pullCloud() {
+  const cfg = loadCfg();
+  if (!cfg.binId || !cfg.key) { setStatus('📴', 'ללא סנכרון'); return Promise.resolve(false); }
+  setStatus('⏳', 'טוען מהענן…');
+  return fetch('https://api.jsonbin.io/v3/b/' + cfg.binId + '/latest', {
+    headers: { 'X-Master-Key': cfg.key }, cache: 'no-store'
+  }).then(r => r.json()).then(j => {
+    const data = (j && j.record) ? j.record : j;
+    const cloudNotes = (data && data.notes) || {};
+    const localNotes = loadNotes();
+    // הענן הוא מקור האמת; ממזגים פנימה הערות מקומיות שלא קיימות בענן
+    const final = Object.assign({}, cloudNotes);
+    Object.keys(localNotes).forEach(k => { if (!final[k] && localNotes[k]) final[k] = localNotes[k]; });
+    applyNotes(final);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(final));
+    const merged = JSON.stringify(final) !== JSON.stringify(cloudNotes);
+    if (merged) pushCloud(final);
+    setStatus('☁️', 'מסונכרן לענן');
+    return true;
+  }).catch(() => { setStatus('⚠️', 'לא הצלחתי לטעון מהענן'); return false; });
+}
+
+function pushCloud(notes) {
+  const cfg = loadCfg();
+  if (!cfg.binId || !cfg.key) return Promise.resolve(false);
+  return fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.key, 'X-Bin-Versioning': 'false' },
+    body: JSON.stringify({ updated: new Date().toISOString(), notes: notes || collectNotes() })
+  }).then(r => r.ok).catch(() => false);
+}
+
+function cloudState() {
+  const el = document.getElementById('syncStatus');
+  return el ? el.textContent : '';
 }
 
 function restoreNotes() {
@@ -549,11 +625,11 @@ function showTab(name) {
 }
 
 function exportNotes() {
-  const notes = loadNotes();
-  const blob = new Blob([JSON.stringify(notes, null, 2)], {type: 'application/json'});
+  const notes = collectNotes();
+  const blob = new Blob([JSON.stringify({ updated: new Date().toISOString(), notes: notes }, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'giron-tracker-notes.json';
+  a.download = 'contracts-tracker-notes.json';
   a.click();
 }
 
@@ -563,11 +639,13 @@ function importNotes(event) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const notes = JSON.parse(e.target.result);
+      const parsed = JSON.parse(e.target.result);
+      const notes = (parsed && parsed.notes) ? parsed.notes : parsed;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-      restoreNotes();
-      document.getElementById('savedMsg').textContent = '✅ ההערות יובאו';
-      setTimeout(() => document.getElementById('savedMsg').textContent = '', 2500);
+      applyNotes(notes);
+      const cfg = loadCfg();
+      if (cfg.binId && cfg.key) pushCloud(notes);
+      showMsg('✅ ההערות יובאו ונשמרו');
     } catch (err) {
       alert('קובץ לא תקין');
     }
@@ -576,14 +654,27 @@ function importNotes(event) {
   event.target.value = '';
 }
 
-document.addEventListener('DOMContentLoaded', restoreNotes);
-document.querySelectorAll('.note-input').forEach(t => {
-  t.addEventListener('input', () => {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNotes, 500);
+/* --- אתחול: טעינה מהענן + רענון תקופתי --- */
+function refreshFromCloud() {
+  if (dirty) return;                       // לא דורסים שינוי מקומי שטרם נדחף
+  const active = document.activeElement;
+  if (active && active.classList && active.classList.contains('note-input')) return;  // לא מרעננים תוך כדי הקלדה
+  pullCloud();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  pullCloud().then(loaded => { if (!loaded) restoreNotes(); });
+  document.querySelectorAll('.note-input').forEach(t => {
+    t.addEventListener('input', () => {
+      dirty = true;
+      setStatus('✏️', 'שינוי מקומי — לא נשמר');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNotes, 800);
+    });
   });
+  setInterval(refreshFromCloud, 30000);    // רענון כל 30 שניות
+  window.addEventListener('focus', refreshFromCloud);
 });
-restoreNotes();
 </script>
 </body>
 </html>
