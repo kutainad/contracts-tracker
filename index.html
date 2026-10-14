@@ -518,7 +518,9 @@ const STORAGE_KEY = 'giron_tracker_notes_v1';
 const CFG_KEY = 'contracts_tracker_cfg_v1';
 const DEFAULT_CFG = { binId: '6a97f59bda38895dfe2ec8b3', key: '$2a$10$Mo79nkShmWdnLxq6LDZFYuHVuFVc3LSVJ3dw6zKld8HgySkA5Mkxq' };
 let saveTimer = null;
-let dirty = false;   // האם יש שינוי מקומי שטרם נדחף
+let dirty = false;        // האם יש שינוי מקומי שטרם נדחף
+let lastEditAt = 0;       // ★ חתימת זמן של ההקלדה האחרונה
+let uiSnapshot = '';      // ★ מה שנשלח לענן — לזיהוי הקלדה בזמן המעוף
 
 function loadCfg() {
   try { return JSON.parse(localStorage.getItem(CFG_KEY)) || DEFAULT_CFG; } catch(e) { return DEFAULT_CFG; }
@@ -551,9 +553,12 @@ function collectNotes() {
   return notes;
 }
 
-function applyNotes(notes) {
+// ★ רקEmpty=true: ממלא רק שדות ריקים, לא נוגע במה שהמשתמש כבר הקליד
+function applyNotes(notes, onlyEmpty) {
   document.querySelectorAll('.note-input').forEach(t => {
-    t.value = (notes && notes[t.dataset.key]) ? notes[t.dataset.key] : '';
+    const val = (notes && notes[t.dataset.key]) ? notes[t.dataset.key] : '';
+    if (onlyEmpty && t.value.trim()) return;   // יש כבר טקסט בטופס — לא נוגעים
+    t.value = val;
   });
 }
 
@@ -563,34 +568,50 @@ function saveNotes() {
   const cfg = loadCfg();
   if (!cfg.binId || !cfg.key) { showMsg('✅ נשמר מקומית'); return; }
   setStatus('⏳', 'שולח לענן…');
+  uiSnapshot = JSON.stringify(notes);          // ★ מה שנשלח — כדי לזהות שינוי בזמן המעוף
   fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.key, 'X-Bin-Versioning': 'false' },
     body: JSON.stringify({ updated: new Date().toISOString(), notes: notes })
   }).then(r => {
-    if (r.ok) { dirty = false; setStatus('☁️', 'מסונכרן לענן'); showMsg('✅ נשמר וסונכרן'); }
-    else { setStatus('⚠️', 'מקומי בלבד (' + r.status + ')'); showMsg('⚠️ נשמר מקומית בלבד'); }
-  }).catch(() => { setStatus('⚠️', 'מקומי בלבד (אין חיבור)'); showMsg('⚠️ נשמר מקומית'); });
+    if (r.ok) {
+      // ★ לא מאפסים dirty באופן עיוור: רק אם לא הקלידו בזמן שהבקשה עפה
+      if (JSON.stringify(collectNotes()) === uiSnapshot) { dirty = false; }
+      setStatus('☁️', 'מסונכרן לענן'); showMsg('✅ נשמר וסונכרן');
+    }
+    else { dirty = true; setStatus('⚠️', 'מקומי בלבד (' + r.status + ')'); showMsg('⚠️ נשמר מקומית בלבד'); }
+  }).catch(() => { dirty = true; setStatus('⚠️', 'מקומי בלבד (אין חיבור)'); showMsg('⚠️ נשמר מקומית'); });
 }
 
 function pullCloud() {
   const cfg = loadCfg();
   if (!cfg.binId || !cfg.key) { setStatus('📴', 'ללא סנכרון'); return Promise.resolve(false); }
+
+  // ★ הגנה קריטית: אם יש שינוי מקומי שטרם נדחף — לא דורסים אותו לעולם
+  const localNotes = loadNotes();
+  if (dirty) { setStatus('✏️', 'יש שינוי מקומי שטרם נדחף'); return Promise.resolve(false); }
+
   setStatus('⏳', 'טוען מהענן…');
   return fetch('https://api.jsonbin.io/v3/b/' + cfg.binId + '/latest', {
     headers: { 'X-Master-Key': cfg.key }, cache: 'no-store'
   }).then(r => r.json()).then(j => {
     const data = (j && j.record) ? j.record : j;
     const cloudNotes = (data && data.notes) || {};
-    const localNotes = loadNotes();
-    // הענן הוא מקור האמת; ממזגים פנימה הערות מקומיות שלא קיימות בענן
+
+    // ★ שוב בודקים dirty — הבקשה עפה זמן, ואולי הקלדת בזמן הזה
+    if (dirty) { setStatus('✏️', 'יש שינוי מקומי שטרם נדחף'); return false; }
+
+    // מיזוג: הענן הוא הבסיס, אבל הערות מקומיות שלא קיימות בענן נשמרות
     const final = Object.assign({}, cloudNotes);
     Object.keys(localNotes).forEach(k => { if (!final[k] && localNotes[k]) final[k] = localNotes[k]; });
-    applyNotes(final);
+
+    // ★ ממלאים רק שדות ריקים — לא נוגעים במה שכבר מוקלד בטופס
+    applyNotes(final, true);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(final));
+
     const merged = JSON.stringify(final) !== JSON.stringify(cloudNotes);
     if (merged) pushCloud(final);
-    setStatus('☁️', 'מסונכרן לענן');
+    setStatus('☁️', 'מסונכרן לענן (' + Object.keys(final).length + ' הערות)');
     return true;
   }).catch(() => { setStatus('⚠️', 'לא הצלחתי לטעון מהענן'); return false; });
 }
@@ -656,9 +677,10 @@ function importNotes(event) {
 
 /* --- אתחול: טעינה מהענן + רענון תקופתי --- */
 function refreshFromCloud() {
-  if (dirty) return;                       // לא דורסים שינוי מקומי שטרם נדחף
+  if (dirty) return;                       // ★ יש שינוי שטרם נדחף — לא דורסים
   const active = document.activeElement;
   if (active && active.classList && active.classList.contains('note-input')) return;  // לא מרעננים תוך כדי הקלדה
+  if (Date.now() - lastEditAt < 20000) return;   // ★ 20 שניות חסד אחרי ההקלדה האחרונה
   pullCloud();
 }
 
@@ -667,13 +689,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.note-input').forEach(t => {
     t.addEventListener('input', () => {
       dirty = true;
+      lastEditAt = Date.now();          // ★ חתימת זמן לכל הקלדה
       setStatus('✏️', 'שינוי מקומי — לא נשמר');
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveNotes, 800);
     });
+    // ★ שמירה מיידית ביציאה מהשדה — לא מחכים ל-800ms
+    t.addEventListener('blur', () => {
+      if (dirty) { clearTimeout(saveTimer); saveNotes(); }
+    });
   });
   setInterval(refreshFromCloud, 30000);    // רענון כל 30 שניות
   window.addEventListener('focus', refreshFromCloud);
+
+  // ★ רשת ביטחון: דחיפה לענן לפני סגירה/רענון של הדף (keepalive = הבקשה שורדת)
+  window.addEventListener('beforeunload', () => {
+    if (!dirty) return;
+    const cfg = loadCfg();
+    if (!cfg.binId || !cfg.key) return;
+    try {
+      fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
+        method: 'PUT',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.key, 'X-Bin-Versioning': 'false' },
+        body: JSON.stringify({ updated: new Date().toISOString(), notes: collectNotes() })
+      });
+    } catch (e) {}
+  });
 });
 </script>
 </body>
