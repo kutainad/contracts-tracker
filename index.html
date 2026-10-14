@@ -521,6 +521,7 @@ let saveTimer = null;
 let dirty = false;        // האם יש שינוי מקומי שטרם נדחף
 let lastEditAt = 0;       // ★ חתימת זמן של ההקלדה האחרונה
 let uiSnapshot = '';      // ★ מה שנשלח לענן — לזיהוי הקלדה בזמן המעוף
+let cloudReady = false;   // ★★ האם הענן נטען בהצלחה. אם לא — אסור לכתוב לענן.
 
 function loadCfg() {
   try { return JSON.parse(localStorage.getItem(CFG_KEY)) || DEFAULT_CFG; } catch(e) { return DEFAULT_CFG; }
@@ -567,6 +568,16 @@ function saveNotes() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
   const cfg = loadCfg();
   if (!cfg.binId || !cfg.key) { showMsg('✅ נשמר מקומית'); return; }
+
+  // ★★ הגנה קריטית: לא דוחפים לענן אם מעולם לא הצלחנו לקרוא ממנו.
+  // אחרת עותק מקומי ישן/חלקי דורס את הנתונים האמיתיים בענן — בדיוק התקלה.
+  if (!cloudReady) {
+    dirty = true;
+    setStatus('📴', 'לא מחובר לענן — נשמר מקומית בלבד');
+    showMsg('⚠️ לא נשמר לענן (אין חיבור)');
+    return;
+  }
+
   setStatus('⏳', 'שולח לענן…');
   uiSnapshot = JSON.stringify(notes);          // ★ מה שנשלח — כדי לזהות שינוי בזמן המעוף
   fetch('https://api.jsonbin.io/v3/b/' + cfg.binId, {
@@ -611,6 +622,7 @@ function pullCloud() {
 
     const merged = JSON.stringify(final) !== JSON.stringify(cloudNotes);
     if (merged) pushCloud(final);
+    cloudReady = true;                        // ★★ קראנו מהענן — מותר לכתוב אליו מכאן והלאה
     setStatus('☁️', 'מסונכרן לענן (' + Object.keys(final).length + ' הערות)');
     return true;
   }).catch(() => { setStatus('⚠️', 'לא הצלחתי לטעון מהענן'); return false; });
@@ -631,11 +643,18 @@ function cloudState() {
   return el ? el.textContent : '';
 }
 
-function restoreNotes() {
+// ★★ גיבוי מקומי בלבד — אף פעם לא "שחזור" שגובר על הענן.
+// אם הענן לא נטען, מציגים עותק מקומי כ-GIBUI בלבד ומסמנים אותו ככזה,
+// כדי שהמשתמש יידע שהנתונים המוצגים אולי לא עדכניים.
+function showLocalCopyAsFallback() {
   const notes = loadNotes();
+  const n = Object.keys(notes).length;
+  if (!n) return false;
   document.querySelectorAll('.note-input').forEach(t => {
     if (notes[t.dataset.key]) t.value = notes[t.dataset.key];
   });
+  setStatus('📴', 'לא מחובר לענן — מוצג עותק מקומי (' + n + ' הערות, לא נשמר)');
+  return true;
 }
 
 function showTab(name) {
@@ -685,7 +704,21 @@ function refreshFromCloud() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  pullCloud().then(loaded => { if (!loaded) restoreNotes(); });
+  // ★★ אם הענן לא נטען — לא דורסים, לא שומרים, לא דוחפים.
+  // מציגים עותק מקומי, מסמנים כ"לא מחובר", ומנסים שוב בעוד 10 שניות.
+  cloudReady = false;
+  pullCloud().then(loaded => {
+    cloudReady = loaded;
+    if (!loaded) {
+      showLocalCopyAsFallback();
+      setStatus('📴', 'אני מנסה שוב להתחבר לענן…');
+      setTimeout(() => {
+        pullCloud().then(ok => {
+          if (ok) { cloudReady = true; applyNotes(loadNotes(), true); setStatus('☁️', 'התחברתי לענן מחדש'); }
+        });
+      }, 10000);
+    }
+  });
   document.querySelectorAll('.note-input').forEach(t => {
     t.addEventListener('input', () => {
       dirty = true;
@@ -704,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ★ רשת ביטחון: דחיפה לענן לפני סגירה/רענון של הדף (keepalive = הבקשה שורדת)
   window.addEventListener('beforeunload', () => {
-    if (!dirty) return;
+    if (!dirty || !cloudReady) return;      // ★ לא דוחפים עותק ישן אם הענן לא נטען
     const cfg = loadCfg();
     if (!cfg.binId || !cfg.key) return;
     try {
